@@ -1,0 +1,37 @@
+name: pylint - Paytel_pass_zipper
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Navigate to root directory
+        run: cd ../..
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install PyInstaller
+        run: pip install pyinstaller
+        
+      - name: Install pyodbc
+        run: pip install pyodbc
+        
+      - name: Build executable
+        run: pyinstaller --onefile --name Paytel_pass_zipper --icon=UI/logos/Paytel_1.ico main.py
+
+      - name: Publish artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Paytel_pass_zipper
+          path: dist/Paytel_pass_zipper.exe
