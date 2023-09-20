@@ -1,1 +1,1 @@
-SELECT [t_vid], [ms_m_mid] FROM [MDM_PROD].[dbo].[terminal] t LEFT JOIN [MDM_PROD].[dbo].[merchant_shop] ms ON ms.[ms_id] = t.[t_ms_id] WHERE t_vid IN ()
+SELECT [t_vid], [ms_m_mid] FROM [MDM_PROD].[dbo].[terminal] t LEFT JOIN [MDM_PROD].[dbo].[merchant_shop] ms ON ms.[ms_id] = t.[t_ms_id] WHERE t_vid IN ('061611')
