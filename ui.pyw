@@ -37,7 +37,7 @@ class MyDialog(QDialog):
         loadUi("./UI/layout.ui", self)
 
         # Set the fixed size of the window
-        self.setFixedSize(402, 226)
+        self.setFixedSize(402, 294)
 
         self.pushButton_User.clicked.connect(self.on_push_button_user_clicked)
         self.pushButton_Pass.clicked.connect(self.on_push_button_pass_clicked)

@@ -16,9 +16,8 @@ def connect_single_query(query, passw, user):
         user_name = user
         user_password = passw
         engine = create_engine(
-            f'mssql+pyodbc://{user_name}:{user_password}@' + SERVER_NAME + '/' + DATABASE_NAME + '?trusted_connection=yes&driver'
-                                                                                    '=ODBC+Driver+18+for+SQL+Server'
-                                                                                    '&encrypt=no')
+            f'mssql+pyodbc://{user_name}:{user_password}@' + SERVER_NAME + '/' + DATABASE_NAME + '?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes&authentication=ActiveDirectoryIntegrated')
+
         with engine.connect() as connection:
             connection.echo = False
             tableResult = pd.read_sql(f'{query}', connection)

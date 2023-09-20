@@ -3,6 +3,7 @@ import pandas as pd
 import pyzipper
 import shutil
 from connect import connect_single_query
+import pyodbc
 
 
 def zip_with_password(input_file, output_zip, password):
@@ -94,9 +95,9 @@ def generate(passw, user, progress_error=None):
                 final_text += f'{tvid}.pdf, '
         if len(tvid_list) > 0:
             progress_error(final_text)
-    except Exception as e:
+    except (Exception, pyodbc.InterfaceError, ConnectionError) as e:
         if progress_error:
-            progress_error(e)
+            progress_error(str(e))
 
 
 if __name__ == '__main__':
