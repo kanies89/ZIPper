@@ -75,6 +75,12 @@ def generate(passw, user, progress_error=None):
                 file.write(query)
 
             df = connect_single_query(query, passw, user)
+            tvid_list_not_found = []
+            tvid_list_found = []
+            for tvid in tvid_list:
+                if tvid not in df['t_vid']:
+                    shutil.move(f'./PDF/{tvid}.pdf', f'./ERROR/{tvid}_not_found_in_database.pdf')
+                    tvid_list_not_found.append(tvid)
 
             for row in range(df.shape[0]):
                 input_file = f'./PDF/{df.iat[row, 0]}.pdf'  # Replace with the file you want to zip
@@ -83,17 +89,30 @@ def generate(passw, user, progress_error=None):
 
                 if pd.isnull(password):
                     shutil.move(input_file, f'./ERROR/{df.iat[row, 0]}.pdf')
+
                 else:
                     zip_with_password(input_file, output_zip, password)
                     shutil.move(input_file, f'./ARCHIVE/{df.iat[row, 0]}.pdf')
+                    tvid_list_found.append(df.iat[row, 0])
 
         final_text = 'All the files were zipped succesfully: '
-        for t, tvid in enumerate(tvid_list):
-            if t == len(tvid_list) - 1:
-                final_text += f'{tvid}.pdf. You can find encrypted files in ZIP folder.'
-            else:
-                final_text += f'{tvid}.pdf, '
-        if len(tvid_list) > 0:
+
+        if len(tvid_list_found) > 0:
+            for t, tvid in enumerate(tvid_list_found):
+                if t == len(tvid_list) - 1:
+                    final_text += f'{tvid}.pdf. You can find encrypted files in ZIP folder.'
+                else:
+                    final_text += f'{tvid}.pdf, '
+
+        final_text = 'Those files were moved to ERROR folder: '
+
+        if len(tvid_list_not_found) > 0:
+            for t, tvid in enumerate(tvid_list_not_found):
+                if t == len(tvid_list) - 1:
+                    final_text += f'{tvid}.pdf.'
+                else:
+                    final_text += f'{tvid}.pdf, '
+
             progress_error(final_text)
     except (Exception, pyodbc.InterfaceError, ConnectionError) as e:
         if progress_error:
