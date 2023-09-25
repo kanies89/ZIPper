@@ -54,7 +54,11 @@ def generate(passw, user, progress_error=None):
         if not os.path.exists(address):
             create_folder_structure(address)
 
+        tvid_list_not_found = []
+        tvid_list_found = []
+
         tvid_list = get_tvid()
+
         if len(tvid_list) == 0:
             if progress_error:
                 progress_error('No PDF files in the folder.')
@@ -75,8 +79,7 @@ def generate(passw, user, progress_error=None):
                 file.write(query)
 
             df = connect_single_query(query, passw, user)
-            tvid_list_not_found = []
-            tvid_list_found = []
+
             for tvid in tvid_list:
                 if tvid not in df['t_vid']:
                     shutil.move(f'./PDF/{tvid}.pdf', f'./ERROR/{tvid}_not_found_in_database.pdf')
