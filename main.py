@@ -24,12 +24,67 @@ def create_folder_structure(address):
 
 def get_tvid():
     tvid_list = []
+    file_list = []
     folder_path = './PDF'  # Replace with the actual path to your folder
 
     for filename in os.listdir(folder_path):
         if filename.endswith('.pdf'):
             tvid_list.append(filename[:6])
-    return tvid_list
+            file_list.append(filename)
+    print(tvid_list)
+    print(file_list)
+    return tvid_list, file_list
+
+
+def encrypt(df, tvid_list, file_list, progress_error=None):
+    tvid_list_not_found = []
+    tvid_list_found = []
+
+    list_of_tvids_in_database = df['t_vid'].to_list()
+
+    for ind in range(len(tvid_list)):
+        print(ind)
+        print(file_list[ind])
+
+        input_file = f'./PDF/{file_list[ind]}'  # Replace with the file you want to zip
+
+        # If TVID not in database
+        if tvid_list[ind] in list_of_tvids_in_database:
+            print('On the list')
+            output_zip = f'./ZIP/{tvid_list[ind]}_encrypted.zip'  # Replace with the desired output zip filename
+            password = f'{df["ms_m_mid"][ind]}'  # Replace with the desired password
+
+            if pd.isnull(password):
+                shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_mid_is_null.pdf')
+                tvid_list_not_found.append(tvid_list[ind])
+            else:
+                zip_with_password(input_file, output_zip, password)
+                shutil.move(input_file, f'./ARCHIVE/{tvid_list[ind]}.pdf')
+                tvid_list_found.append(tvid_list[ind])
+
+        else:
+            shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_not_found_in_database.pdf')
+            tvid_list_not_found.append(tvid_list[ind])
+
+    final_text = 'All the files were zipped succesfully: '
+    if len(tvid_list_found) > 0:
+        for t, tvid in enumerate(tvid_list_found):
+            if t == len(tvid_list) - 1:
+                final_text += f'{tvid}.pdf. You can find encrypted files in ZIP folder.'
+            else:
+                final_text += f'{tvid}.pdf, '
+
+        progress_error(final_text)
+
+    final_text = 'Those files were moved to ERROR folder: '
+    if len(tvid_list_not_found) > 0:
+        for t, tvid in enumerate(tvid_list_not_found):
+            if t == len(tvid_list) - 1:
+                final_text += f'{tvid}.pdf.'
+            else:
+                final_text += f'{tvid}.pdf, '
+
+        progress_error(final_text)
 
 
 def generate(passw, user, progress_error=None):
@@ -54,20 +109,20 @@ def generate(passw, user, progress_error=None):
         if not os.path.exists(address):
             create_folder_structure(address)
 
-        tvid_list_not_found = []
-        tvid_list_found = []
+        prepare_data = get_tvid()
 
-        tvid_list = get_tvid()
+        tvid_list = prepare_data[0]
+        file_list = prepare_data[1]
 
         if len(tvid_list) == 0:
             if progress_error:
                 progress_error('No PDF files in the folder.')
             print('No PDF files in the folder.')
         else:
-
             tvid_text = ""
-            for e, each in enumerate(tvid_list):
-                if e == 0:
+
+            for i, each in enumerate(tvid_list):
+                if i == 0:
                     tvid_text += f"'{each}'"
                 else:
                     tvid_text += f", '{each}'"
@@ -80,43 +135,8 @@ def generate(passw, user, progress_error=None):
 
             df = connect_single_query(query, passw, user)
 
-            for tvid in tvid_list:
-                if tvid not in df['t_vid']:
-                    shutil.move(f'./PDF/{tvid}.pdf', f'./ERROR/{tvid}_not_found_in_database.pdf')
-                    tvid_list_not_found.append(tvid)
+            encrypt(df, tvid_list, file_list, progress_error)
 
-            for row in range(df.shape[0]):
-                input_file = f'./PDF/{df.iat[row, 0]}.pdf'  # Replace with the file you want to zip
-                output_zip = f'./ZIP/{df.iat[row, 0]}_encrypted.zip'  # Replace with the desired output zip filename
-                password = f'{df.iat[row, 1]}'  # Replace with the desired password
-
-                if pd.isnull(password):
-                    shutil.move(input_file, f'./ERROR/{df.iat[row, 0]}.pdf')
-
-                else:
-                    zip_with_password(input_file, output_zip, password)
-                    shutil.move(input_file, f'./ARCHIVE/{df.iat[row, 0]}.pdf')
-                    tvid_list_found.append(df.iat[row, 0])
-
-        final_text = 'All the files were zipped succesfully: '
-
-        if len(tvid_list_found) > 0:
-            for t, tvid in enumerate(tvid_list_found):
-                if t == len(tvid_list) - 1:
-                    final_text += f'{tvid}.pdf. You can find encrypted files in ZIP folder.'
-                else:
-                    final_text += f'{tvid}.pdf, '
-
-        final_text = 'Those files were moved to ERROR folder: '
-
-        if len(tvid_list_not_found) > 0:
-            for t, tvid in enumerate(tvid_list_not_found):
-                if t == len(tvid_list) - 1:
-                    final_text += f'{tvid}.pdf.'
-                else:
-                    final_text += f'{tvid}.pdf, '
-
-            progress_error(final_text)
     except (Exception, pyodbc.InterfaceError, ConnectionError) as e:
         if progress_error:
             progress_error(str(e))
