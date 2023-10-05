@@ -66,25 +66,25 @@ def encrypt(df, tvid_list, file_list, progress_error=None):
             shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_not_found_in_database.pdf')
             tvid_list_not_found.append(tvid_list[ind])
 
-    final_text = 'All the files were zipped succesfully: '
+    message = ''
+    final_text_success = 'All the files were zipped succesfully: '
     if len(tvid_list_found) > 0:
         for t, tvid in enumerate(tvid_list_found):
-            if t == len(tvid_list) - 1:
-                final_text += f'{tvid}.pdf. You can find encrypted files in ZIP folder.'
+            if t == len(tvid_list_found) - 1:
+                final_text_success += f'{tvid}.pdf. You can find encrypted files in ZIP folder. '
             else:
-                final_text += f'{tvid}.pdf, '
+                final_text_success += f'{tvid}.pdf, '
+        message += final_text_success
 
-        progress_error(final_text)
-
-    final_text = 'Those files were moved to ERROR folder: '
+    final_text_fail = 'Those files were moved to ERROR folder: '
     if len(tvid_list_not_found) > 0:
         for t, tvid in enumerate(tvid_list_not_found):
-            if t == len(tvid_list) - 1:
-                final_text += f'{tvid}.pdf.'
+            if t == len(tvid_list_not_found) - 1:
+                final_text_fail += f'{tvid}.pdf.'
             else:
-                final_text += f'{tvid}.pdf, '
-
-        progress_error(final_text)
+                final_text_fail += f'{tvid}.pdf, '
+        message += final_text_fail
+    progress_error(message)
 
 
 def generate(passw, user, progress_error=None):
