@@ -127,8 +127,8 @@ def generate(passw, user, progress_error=None):
                 else:
                     tvid_text += f", '{each}'"
 
-            query = f"SELECT [t_vid], [ms_m_mid] FROM [MDM_PROD].[dbo].[terminal] t LEFT JOIN [MDM_PROD].[dbo].[" \
-                    f"merchant_shop] ms ON ms.[ms_id] = t.[t_ms_id] WHERE t_vid IN ({tvid_text})"
+            query = f"SELECT [t_vid], [ms_m_mid] FROM [MDM_PROD].[dbo].[terminal] t with (nolock) LEFT JOIN [" \
+                    f"MDM_PROD].[dbo].[merchant_shop] ms ON ms.[ms_id] = t.[t_ms_id] WHERE t_vid IN ({tvid_text})"
 
             with open("query.txt", "w") as file:
                 file.write(query)
