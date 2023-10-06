@@ -8,6 +8,7 @@ from main import generate
 class AutomationThread(QThread):
     # Define custom signals to communicate with the main thread
     finished = pyqtSignal()
+
     log_updated = pyqtSignal(str)  # Custom signal to send log messages
 
     def __init__(self):
@@ -26,6 +27,11 @@ class AutomationThread(QThread):
         # Emit the finished signal to indicate the completion
         self.finished.emit()
 
+    def close_event(self, event):
+        # Terminate the thread when the application is closed
+        self.automation_thread.terminate()
+        event.accept()
+
 
 class MyDialog(QDialog):
     def __init__(self):
@@ -35,6 +41,9 @@ class MyDialog(QDialog):
 
         # Load the UI from the XML file
         loadUi("./UI/layout.ui", self)
+
+        # Initialize the automation_thread attribute
+        self.automation_thread = AutomationThread()
 
         # Set the fixed size of the window
         self.setFixedSize(402, 294)
@@ -97,6 +106,11 @@ class MyDialog(QDialog):
                 return True
 
         return super().eventFilter(obj, event)
+
+    def closeEvent(self, event):
+        # Terminate the thread when the application is closed
+        self.automation_thread.terminate()
+        event.accept()
 
 
 if __name__ == "__main__":
