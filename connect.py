@@ -3,7 +3,8 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 import pyodbc
 from msvcrt import getch
-import getpass, sys
+import getpass
+import sys
 
 # Setting the connection
 DRIVER_NAME = '{ODBC Driver 18 for SQL Server}'
