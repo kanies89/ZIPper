@@ -4,6 +4,8 @@ import pyzipper
 import shutil
 from connect import connect_single_query
 import pyodbc
+import datetime
+import random
 
 
 def zip_with_password(input_file, output_zip, password):
@@ -36,12 +38,12 @@ def get_tvid():
     return tvid_list, file_list
 
 
-def encrypt(df, tvid_list, file_list, progress_error=None):
+def encrypt(df, d, n, tvid_list, file_list, progress_error=None):
     tvid_list_not_found = []
     tvid_list_found = []
 
     list_of_tvids_in_database = df['t_vid'].to_list()
-
+    passwords = []
     for ind in range(len(tvid_list)):
         print(ind)
         print(file_list[ind])
@@ -51,7 +53,7 @@ def encrypt(df, tvid_list, file_list, progress_error=None):
         # If TVID not in database
         if tvid_list[ind] in list_of_tvids_in_database:
             print('On the list')
-            output_zip = f'./ZIP/{tvid_list[ind]}_encrypted.zip'  # Replace with the desired output zip filename
+            output_zip = f'./ZIP/{d}_{n}_{tvid_list[ind]}_encrypted.zip'  # Replace with the desired output zip filename
             password = f'{df["ms_m_mid"][ind]}'  # Replace with the desired password
 
             if pd.isnull(password):
@@ -61,6 +63,7 @@ def encrypt(df, tvid_list, file_list, progress_error=None):
                 zip_with_password(input_file, output_zip, password)
                 shutil.move(input_file, f'./ARCHIVE/{tvid_list[ind]}.pdf')
                 tvid_list_found.append(tvid_list[ind])
+                passwords.append([output_zip, password])
 
         else:
             shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_not_found_in_database.pdf')
@@ -84,6 +87,10 @@ def encrypt(df, tvid_list, file_list, progress_error=None):
             else:
                 final_text_fail += f'{tvid}.pdf, '
         message += final_text_fail
+
+    if len(passwords) > 0:
+        pd.DataFrame(passwords).to_excel(f"{d}_{n}_passwords.xlsx")
+
     progress_error(message)
 
 
@@ -134,8 +141,12 @@ def generate(passw, user, progress_error=None):
                 file.write(query)
 
             df = connect_single_query(query, passw, user)
+            date = datetime.date.today()
+            number_random = random.randint(0, 1000000)
 
-            encrypt(df, tvid_list, file_list, progress_error)
+            df.to_excel(f"{date}_{number_random}_result.xlsx")
+
+            encrypt(df, date, number_random, tvid_list, file_list, progress_error)
 
     except (Exception, pyodbc.InterfaceError, ConnectionError) as e:
         if progress_error:
