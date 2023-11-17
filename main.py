@@ -44,6 +44,7 @@ def encrypt(df, d, n, tvid_list, file_list, progress_error=None):
 
     list_of_tvids_in_database = df['t_vid'].to_list()
     passwords = []
+    message = ''
     for ind in range(len(tvid_list)):
         print(ind)
         print(file_list[ind])
@@ -56,9 +57,11 @@ def encrypt(df, d, n, tvid_list, file_list, progress_error=None):
             output_zip = f'./ZIP/{d}_{n}_{tvid_list[ind]}_encrypted.zip'  # Replace with the desired output zip filename
             password = f'{df["ms_m_mid"][ind]}'  # Replace with the desired password
 
-            if pd.isnull(password):
+            if pd.isnull(password) or len(df["ms_m_mid"][ind]) != 5:
                 shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_mid_is_null.pdf')
                 tvid_list_not_found.append(tvid_list[ind])
+                message += f'Given MID is NULL or TOO SHORT/LONG - {df["ms_m_mid"][ind]}. '
+
             else:
                 zip_with_password(input_file, output_zip, password)
                 shutil.move(input_file, f'./ARCHIVE/{tvid_list[ind]}.pdf')
@@ -69,7 +72,6 @@ def encrypt(df, d, n, tvid_list, file_list, progress_error=None):
             shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_not_found_in_database.pdf')
             tvid_list_not_found.append(tvid_list[ind])
 
-    message = ''
     final_text_success = 'All the files were zipped succesfully: '
     if len(tvid_list_found) > 0:
         for t, tvid in enumerate(tvid_list_found):
