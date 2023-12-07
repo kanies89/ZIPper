@@ -38,39 +38,39 @@ def get_tvid():
     return tvid_list, file_list
 
 
-def encrypt(df, d, n, tvid_list, file_list, progress_error=None):
+def encrypt(df, d, n, progress_error=None):
     tvid_list_not_found = []
     tvid_list_found = []
 
     list_of_tvids_in_database = df['t_vid'].to_list()
+
     passwords = []
     message = ''
-    for ind in range(len(tvid_list)):
-        print(ind)
-        print(file_list[ind])
 
-        input_file = f'./PDF/{file_list[ind]}'  # Replace with the file you want to zip
+    for t, tvid in enumerate(df['t_vid']):
+
+        input_file = f'./PDF/{tvid}.pdf'  # Replace with the file you want to zip
 
         # If TVID not in database
-        if tvid_list[ind] in list_of_tvids_in_database:
+        if tvid in list_of_tvids_in_database:
             print('On the list')
-            output_zip = f'./ZIP/{d}_{n}_{tvid_list[ind]}_encrypted.zip'  # Replace with the desired output zip filename
-            password = f'{df["ms_m_mid"][ind]}'  # Replace with the desired password
+            output_zip = f'./ZIP/{d}_{n}_{tvid}_encrypted.zip'  # Replace with the desired output zip filename
+            password = f'{df["ms_m_mid"][t]}'  # Replace with the desired password
 
-            if pd.isnull(password) or len(df["ms_m_mid"][ind]) != 5:
-                shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_mid_is_null.pdf')
-                tvid_list_not_found.append(tvid_list[ind])
-                message += f'Given MID is NULL or TOO SHORT/LONG - {df["ms_m_mid"][ind]}. '
+            if pd.isnull(password) or len(df["ms_m_mid"][t]) != 5:
+                shutil.move(input_file, f'./ERROR/{tvid}_mid_is_null.pdf')
+                tvid_list_not_found.append(tvid)
+                message += f'Given MID is NULL or TOO SHORT/LONG - {df["ms_m_mid"][t]}. '
 
             else:
                 zip_with_password(input_file, output_zip, password)
-                shutil.move(input_file, f'./ARCHIVE/{tvid_list[ind]}.pdf')
-                tvid_list_found.append(tvid_list[ind])
+                shutil.move(input_file, f'./ARCHIVE/{tvid}.pdf')
+                tvid_list_found.append(tvid)
                 passwords.append([output_zip, password])
 
         else:
-            shutil.move(input_file, f'./ERROR/{tvid_list[ind]}_not_found_in_database.pdf')
-            tvid_list_not_found.append(tvid_list[ind])
+            shutil.move(input_file, f'./ERROR/{tvid}_not_found_in_database.pdf')
+            tvid_list_not_found.append(tvid)
 
     final_text_success = 'All the files were zipped succesfully: '
     if len(tvid_list_found) > 0:
@@ -121,7 +121,6 @@ def generate(passw, user, progress_error=None):
         prepare_data = get_tvid()
 
         tvid_list = prepare_data[0]
-        file_list = prepare_data[1]
 
         if len(tvid_list) == 0:
             if progress_error:
@@ -148,7 +147,7 @@ def generate(passw, user, progress_error=None):
 
             df.to_excel(f"{date}_{number_random}_result.xlsx")
 
-            encrypt(df, date, number_random, tvid_list, file_list, progress_error)
+            encrypt(df, date, number_random, progress_error)
 
     except (Exception, pyodbc.InterfaceError, ConnectionError) as e:
         if progress_error:
